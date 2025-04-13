@@ -49,7 +49,7 @@ class LocalLLMService:
 
             # Start server
             cmd = [
-                "llama-server",
+                os.environ['LLAMACPPSERVERBIN'],
                 "-m", model_path,
                 "--host", "0.0.0.0",
                 "--port", "8000"

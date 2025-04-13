@@ -572,22 +572,38 @@ class L2DataProcessor:
 
         # Run GraphRAG indexing
         try:
+            # graphrag index --config lpm_kernel/L2/data_pipeline/graphrag_indexing/settings.yaml --root lpm_kernel/L2/data_pipeline/graphrag_indexing
+            
+            logger.info(f"Running GraphRAG indexing... {os.environ['PYTHONEXE']}")
             result = subprocess.run(
                 [
-                    "bash",
+                    os.environ['PYTHONEXE'],
+                    "-m",
+                    "graphrag",
+                    "index",
+                    "--config",
                     os.path.join(
                         os.getcwd(),
-                        "lpm_kernel/L2/data_pipeline/data_prep/scripts/graphrag_indexing.sh",
+                        "lpm_kernel/L2/data_pipeline/graphrag_indexing/settings.yaml",
+                    ),
+                    "--root",
+                    os.path.join(
+                        os.getcwd(),
+                        "lpm_kernel/L2/data_pipeline/graphrag_indexing",
                     ),
                 ],
                 check=True,
                 text=True,
                 capture_output=True,
+                shell=True,
             )
+            logger.info(f"GraphRAG indexing completed successfully. {result}")
             logger.error(f"subprocess.run graphrag index error: {result.stderr}")
             if result.stderr:
                 raise RuntimeError("subprocess.run graphrag index error")
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             raise
 
         """Post-processing"""

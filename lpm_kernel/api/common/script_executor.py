@@ -53,7 +53,7 @@ class ScriptExecutor:
             if args:
                 cmd.extend(args)
 
-            logger.info(f"Executing command: {' '.join(cmd)}")
+            logger.info(f"Executing command: {' '.join(cmd)} with cwd: {os.getcwd()}")
 
             # If logging is needed, ensure the log directory exists
             if log_file:
@@ -68,6 +68,7 @@ class ScriptExecutor:
                 stderr=subprocess.STDOUT,  # Redirect error output to standard output
                 bufsize=1,  # Line buffering
                 universal_newlines=True,  # Use text mode
+                cwd=os.getcwd(),
             )
 
             # Read and process output in real-time

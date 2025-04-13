@@ -75,3 +75,6 @@ run/*
 .backend.pid
 .frontend.pid
 logs/train/
+
+env
+node/node_modules

@@ -14,7 +14,7 @@ def init_chroma_db():
         try:
             collection = client.get_collection(name="documents")
             print(f"Collection 'documents' already exists")
-        except ValueError:
+        except Exception:
             collection = client.create_collection(
                 name="documents",
                 metadata={
@@ -28,7 +28,7 @@ def init_chroma_db():
         try:
             collection = client.get_collection(name="document_chunks")
             print(f"Collection 'document_chunks' already exists")
-        except ValueError:
+        except Exception:
             collection = client.create_collection(
                 name="document_chunks",
                 metadata={
@@ -40,6 +40,7 @@ def init_chroma_db():
         
         print(f"ChromaDB initialized at {chroma_path}")
     except Exception as e:
+        raise e
         print(f"An error occurred while initializing ChromaDB: {e}")
         # no exception for following process
         # ChromaRepository will create collection if needed

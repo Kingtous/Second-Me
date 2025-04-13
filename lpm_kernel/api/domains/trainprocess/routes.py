@@ -124,7 +124,7 @@ def stream_logs():
         while True:
             try:
                 encoding = from_path(log_file_path).best().encoding
-                with open(log_file_path, 'r', encoding=encoding) as log_file:
+                with open(log_file_path, 'r', encoding=encoding, errors="ignore") as log_file:
                     log_file.seek(last_position)
                     new_lines = log_file.readlines()  # Read new lines
 

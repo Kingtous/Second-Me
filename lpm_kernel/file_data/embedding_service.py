@@ -71,7 +71,7 @@ class EmbeddingService:
                 result = self.document_collection.get(
                     ids=[str(document.id)], include=["embeddings"]
                 )
-                if not result or not result["embeddings"]:
+                if not result or result["embeddings"] is None:
                     logger.error(
                         f"Failed to verify embedding storage for document {document.id}"
                     )
@@ -144,7 +144,7 @@ class EmbeddingService:
                     result = self.chunk_collection.get(
                         ids=[str(chunk.id)], include=["embeddings"]
                     )
-                    if result and result["embeddings"]:
+                    if result and result["embeddings"] is not None:
                         chunk.has_embedding = True
                         logger.info(f"Verified embedding for chunk {chunk.id}")
                     else:
@@ -187,7 +187,7 @@ class EmbeddingService:
                 ids=[str(chunk_id)], include=["embeddings"]
             )
 
-            if not result or not result["embeddings"]:
+            if not result or result["embeddings"] is None:
                 logger.warning(f"No embedding found for chunk {chunk_id}")
                 return None
 
@@ -221,7 +221,7 @@ class EmbeddingService:
                 ids=[str(document_id)], include=["embeddings"]
             )
 
-            if not result or not result["embeddings"]:
+            if not result or result["embeddings"] is None:
                 logger.warning(f"No embedding found for document {document_id}")
                 return None
 

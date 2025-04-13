@@ -42,13 +42,13 @@ def extract_notes_from_documents(documents) -> tuple[List[Note], list]:
             doc_id
         )
 
-        if not doc_embedding:
+        if doc_embedding is None:
             logger.warning(f"Document {doc_id} missing document embedding")
             continue
-        if not chunks:
+        if chunks is None:
             logger.warning(f"Document {doc_id} missing chunks")
             continue
-        if not all_chunk_embeddings:
+        if all_chunk_embeddings is None:
             logger.warning(f"Document {doc_id} missing chunk embeddings")
             continue
 
@@ -79,13 +79,13 @@ def extract_notes_from_documents(documents) -> tuple[List[Note], list]:
                     document_id=doc_id,
                     content=chunk.content,
                     embedding=np.array(all_chunk_embeddings.get(chunk.id))
-                    if all_chunk_embeddings.get(chunk.id)
+                    if all_chunk_embeddings.get(chunk.id) is not None
                     else None,
                     tags=chunk.tags if hasattr(chunk, "tags") else None,
                     topic=chunk.topic if hasattr(chunk, "topic") else None,
                 )
                 for chunk in chunks
-                if all_chunk_embeddings.get(chunk.id)
+                if all_chunk_embeddings.get(chunk.id) is not None
             ],
             title=insight_data.get("title", ""),
             summary=summary_data.get("summary", ""),

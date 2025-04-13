@@ -24,6 +24,7 @@ from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 from trl import SFTTrainer, SFTConfig, DataCollatorForCompletionOnlyLM
 
 # Local imports
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from lpm_kernel.L2.utils import (
     create_and_prepare_model,
     formatting_prompts_func,
@@ -245,7 +246,7 @@ def main(model_args, data_args, training_args):
 
     trainer = SFTTrainer(
         model=model,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         args=training_args,
         train_dataset=train_dataset,
         peft_config=peft_config,

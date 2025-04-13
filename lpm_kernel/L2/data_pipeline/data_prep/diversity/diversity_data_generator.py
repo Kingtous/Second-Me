@@ -65,7 +65,7 @@ class DiversityDataGenerator:
                 base_url=user_llm_config.chat_endpoint,
             )
         self.preference_language = preference_language
-        self.max_workers = os.environ.get("concurrency_threads", 2)
+        self.max_workers = int(os.environ.get("concurrency_threads", "2"))
         self.data_synthesis_mode = os.environ.get("DATA_SYNTHESIS_MODE", "low")
         self.is_cot = is_cot
         if self.is_cot:

@@ -388,6 +388,10 @@ def save_hf_model(model_name="Qwen2.5-0.5B-Instruct", log_file_path=None) -> str
     logger.info(f"Starting download of model: {model_name}")
     logger.info(f"Will be saved to: {save_path}")
     
+    if os.path.exists(save_path):
+        logger.info(f"Model already exists at {save_path}. Skipping download.")
+        return save_path
+    
     hf_model_name = f"Qwen/{model_name}"
     
     try:

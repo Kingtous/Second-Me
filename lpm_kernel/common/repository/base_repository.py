@@ -55,6 +55,7 @@ class BaseRepository(Generic[T]):
                 if filters:
                     query = query.filter_by(**filters)
                 query = query.limit(limit).offset(offset)
+                print(f"Executing query: {query}")
                 results = session.scalars(query).all()
                 return [self.model.from_dict(item.to_dict()) for item in results]
             except Exception as e:

@@ -445,6 +445,11 @@ class TrainProcessService:
         except Exception as e:
             self.logger.error(f"Extract dimensional topics failed: {str(e)}")
             self.progress.mark_step_failed(ProcessStep.EXTRACT_DIMENSIONAL_TOPICS)
+            
+            import traceback
+            
+            traceback.print_exc()
+            
             return False
 
     def model_download(self) -> bool:
@@ -565,6 +570,10 @@ class TrainProcessService:
             return True
             
         except Exception as e:
+            import traceback
+            
+            traceback.print_exc()
+            
             self.logger.error(f"Reinforce identity failed: {str(e)}")
             self.progress.mark_step_failed(ProcessStep.REINFORCE_IDENTITY)
             return False
@@ -771,7 +780,7 @@ class TrainProcessService:
                     self.logger.error(error_msg)
                     self.progress.mark_step_failed(ProcessStep.TRAIN)
                     return False
-        
+            self.progress.mark_step_completed(ProcessStep.TRAIN)
             return True
         
         except Exception as e:
@@ -873,9 +882,60 @@ class TrainProcessService:
             # Open log file
             log_file = open(log_path, "ab")
             
+            # Set environment variables for training
+            LEARNING_RATE="2e-4"
+            NUM_TRAIN_EPOCHS="3"
+            CONCURRENCY_THREADS="2"
+            DATA_SYNTHESIS_MODE="low"
+            os.environ['LEARNING_RATE'] = LEARNING_RATE
+            os.environ['NUM_TRAIN_EPOCHS'] = NUM_TRAIN_EPOCHS
+            os.environ['CONCURRENCY_THREADS'] = CONCURRENCY_THREADS
+            os.environ['DATA_SYNTHESIS_MODE'] = DATA_SYNTHESIS_MODE
+            os.environ['HALF'] = "False"
+            
+            args = [
+                os.environ['PYTHONEXE'], "lpm_kernel/L2/train.py",
+                "--seed", "42",
+                "--model_name_or_path", os.environ['MODEL_BASE_PATH'],
+                "--user_name", os.environ['USER_NAME'],
+                "--dataset_name", "resources/L2/data/merged.json",
+                "--chat_template_format", "chatml",
+                "--add_special_tokens", "False",
+                "--append_concat_token", "False",
+                "--max_seq_length", "512",
+                "--num_train_epochs", os.environ['NUM_TRAIN_EPOCHS'],
+                "--save_total_limit", "2",
+                "--logging_steps", "20",
+                "--log_level", "info",
+                "--logging_strategy", "steps",
+                "--save_strategy", "steps",
+                "--save_steps", "5",
+                "--push_to_hub", "False",
+                "--bf16", os.environ['HALF'],
+                "--packing", "False",
+                "--learning_rate", os.environ['LEARNING_RATE'],
+                "--lr_scheduler_type", "cosine",
+                "--weight_decay", "1e-4",
+                "--max_grad_norm", "0.3",
+                "--output_dir", os.environ['MODEL_PERSONAL_DIR'],
+                "--per_device_train_batch_size", "2",
+                "--gradient_accumulation_steps", os.environ['CONCURRENCY_THREADS'],
+                "--gradient_checkpointing", "True",
+                "--use_reentrant", "True",
+                "--use_peft_lora", "True",
+                "--lora_r", "8",
+                "--lora_alpha", "16",
+                "--lora_dropout", "0.1",
+                "--lora_target_modules", "all-linear",
+                "--use_4bit_quantization", "False",
+                "--use_nested_quant", "False",
+                "--bnb_4bit_compute_dtype", "bfloat16",
+                "--is_cot", "False",
+            ]
+            
             # Use subprocess.Popen to directly execute the training script, redirecting output to file
             process = subprocess.Popen(
-                cmd,
+                args=args,
                 env=env,
                 stdout=log_file,
                 stderr=subprocess.STDOUT,
@@ -1001,7 +1061,7 @@ class TrainProcessService:
             
             # Initialize last_position to the end of file to only process new content
             try:
-                with open(log_file, 'r') as f:
+                with open(log_file, 'r', encoding='utf-8') as f:
                     f.seek(0, 2)  # Move to the end of file
                     last_position = f.tell()
             except FileNotFoundError:
@@ -1018,7 +1078,7 @@ class TrainProcessService:
             while True:
                 try:
                     # Read new log content
-                    with open(log_file, 'r') as f:
+                    with open(log_file, 'r', encoding='utf-8') as f:
                         f.seek(last_position)
                         new_lines = f.readlines()
                         last_position = f.tell()
@@ -1115,18 +1175,25 @@ class TrainProcessService:
 
             # Ensure merged output directory exists
             os.makedirs(paths["merged_dir"], exist_ok=True)
-                
+            
+            # python lpm_kernel/L2/merge_lora_weights.py  --base_model_path "${MODEL_BASE_PATH}"  --lora_adapter_path "${MODEL_PERSONAL_DIR}"  --output_model_path "${MODEL_MERGED_DIR}"
             script_path = os.path.join(
-                os.getcwd(), "lpm_kernel/L2/merge_weights_for_user.sh"
-                )
+                os.getcwd(), "lpm_kernel/L2/merge_lora_weights.py"
+            )
             log_path = os.path.join(os.getcwd(), "logs", f"merge_weights_{self.model_name}.log")
             
             # Ensure log directory exists
             os.makedirs(os.path.dirname(log_path), exist_ok=True)
+            os.environ['PYTHONPATH'] = os.getcwd()
             # Use script executor to execute merge script
             script_executor = ScriptExecutor()
             result = script_executor.execute(
-                script_path=script_path, script_type="merge_weights", log_file=log_path
+                script_path=os.environ['PYTHONEXE'], args=[
+                    script_path,
+                    "--base_model_path", os.environ['MODEL_BASE_PATH'],
+                    "--lora_adapter_path", os.environ['MODEL_PERSONAL_DIR'],
+                    "--output_model_path", os.environ['MODEL_MERGED_DIR'],
+                ], script_type="merge_weights", log_file=log_path
             )
             
             self.logger.info(f"Weight merge task result: {result}")

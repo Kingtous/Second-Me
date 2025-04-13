@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "rm -rf .next && next dev --turbo -p 3000",
+    "dev": "next dev --turbo -p 3000",
     "build": "next build",
     "start": "next start",
     "eslint:error": "eslint --quiet --ext .js,.jsx,.ts,.tsx src",
